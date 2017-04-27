@@ -1,5 +1,4 @@
 <?php
-
 if ( ! defined( 'ABSPATH' ) ) {
     exit; // Exit if accessed directly
 }
@@ -22,7 +21,6 @@ if ( ! class_exists( 'WC_Delivery_Shipping_Method' ) ) {
                 'UA', // Ukraine
                 'GB', // United Kingdom
                 'CA', // Canada
-
                 );
             $this->init();
             $this->enabled = isset( $this->settings['enabled'] ) ? $this->settings['enabled'] : 'yes';
@@ -41,7 +39,6 @@ if ( ! class_exists( 'WC_Delivery_Shipping_Method' ) ) {
             // Save settings in admin if you have any defined
             add_action( 'woocommerce_update_options_shipping_' . $this->id, array( $this, 'process_admin_options' ) );
         }
-
         /**
          * Define settings field for this shipping
          * @return void 
@@ -83,24 +80,28 @@ if ( ! class_exists( 'WC_Delivery_Shipping_Method' ) ) {
         public function calculate_shipping( $package = array() ) {
             
             $country = $package["destination"]["country"];
-            error_log(print_r($package["destination"], true));
-            //error_log(print_r($package, true));
-            $weight = 0;
-            foreach ( $package['contents'] as $item_id => $values ) { 
-               $_product = $values['data']; 
-               $weight = $weight + $_product->get_weight() * $values['quantity']; 
-           }
-           error_log(print_r($weight, true));
             // We will add the cost, rate and logics in here
+            $countryZones = array(
+                'UA' => 0,
+                'GB' => 1,
+                'CA' => 2,
+
+            );
+            $zonePrices = array(
+                0 => 30,
+                1 => 200,
+                2 => 500
+            );
+            $zoneFromCountry = $countryZones[ $country ];
+            $priceFromZone = $zonePrices[ $zoneFromCountry ];
              $rate = array(
                 'id' => $this->id,
                 'label' => $this->title,
-                'cost' => $this->settings['coast'] * $weight,
+                'cost' => $this->settings['coast']+$priceFromZone,
                 'calc_tax' => 'per_item'
             );
             // Register the rate
             $this->add_rate( $rate );
-
         }
     }
 }
